@@ -1,0 +1,41 @@
+name: SentinelVault Backend CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # Optional: In the future, you can add PostgreSQL here
+      # For now, we use SQLite for CI tests
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Set Environment Variables
+      run: |
+        echo "SECRET_KEY=ci-test-key-not-for-production" >> .env
+        echo "FERNET_KEY=tRnlRKZDy1vR_k16k4jdE2OnWT17-OPQhrWdHrG0y8s=" >> .env
+        echo "DEBUG=True" >> .env
+        echo "CORS_ALLOWED_ORIGINS=http://localhost:3000" >> .env
+
+    - name: Run Migrations
+      run: python manage.py migrate
+
+    - name: Run Security & Integration Tests
+      run: python test_api.py
